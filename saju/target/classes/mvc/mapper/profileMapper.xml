@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="profile">
+
+
+<resultMap type="ilju" id="ilju">
+    <result column="result_basic" property="result_basic"/>
+</resultMap>
+ 
+<resultMap type="mem" id="mem">
+    <result column="user_img" property="user_img"/>
+    <result column="name" property="name"/>
+    <result column="user_intro" property="user_intro"/>
+    <result column="nickname" property="nickname"/>
+    
+    <association property="iljuvo" resultMap="ilju"/>
+    
+</resultMap>
+ 
+<select id="sajuBasic" parameterType="int" resultMap="mem">
+    select u.user_id as user_id, u.user_intro as user_intro, u.nickname as nickname,u.user_img as user_img, u.name as name, i.result_basic as result_basic 
+		from user_info u, sajuilju i 
+		where u.ilju=i.ilju and u.user_num=#{user_num}
+</select>
+
+<select id="delete" parameterType="int" resultType="mem">
+    select user_id as user_id , pwd as pwd from user_info where user_num=#{user_num}
+</select>
+
+
+
+<select id="follow" parameterType="int" resultType="int">
+        select COUNT(*) cnt1 from likeuser where user_num = (select user_num from user_info where user_num=#{user_num} )and like_ox='true'
+</select>
+
+
+
+<select id="follower" parameterType="int" resultType="int">
+        select COUNT(*) cnt2 from likeuser where liked_user = (select user_num from user_info where user_num= #{user_num} )and like_ox='true'
+</select>
+
+
+
+<select id="board" parameterType="int" resultType="board">
+select board_num as board_num, board_img as board_img from 
+        board_info where board_writer_num =(select user_num from user_info where user_num= #{user_num}) order by board_num desc
+</select>
+
+<select id="boardmaxnum" parameterType="int" resultType="int">
+select count(board_writer_num) as maxnum from board_info where board_writer_num =(select user_num from user_info where user_num= #{user_num})
+</select>
+
+
+<insert id="withdrawalInsert" parameterType="mem">
+INSERT INTO withdrawal (user_id,pwd,reason,user_num) values (#{user_id},#{pwd},#{reason},del_seq.nextval)
+</insert>
+
+<delete id="deletereason" parameterType="mem">
+delete from user_info where user_id = #{user_id}
+</delete>
+
+<!-- follow list -->
+<select id="followlist" parameterType="int" resultType="hashMap">
+select a.user_num user_num, b.user_num liker_user, b.nickname nickname, b.user_img user_img
+from user_info a,user_info b 
+where b.user_num in (select liked_user from likeuser where user_num =#{user_num} and like_ox='true') and a.user_num=#{user_num}
+</select>
+
+<!-- follower list -->
+<select id="followerlist" parameterType="int" resultType="hashMap">
+select a.user_num user_num, b.user_num liker_user, b.nickname nickname, b.user_img user_img
+from user_info a,user_info b 
+where b.user_num in (select user_num from likeuser where liked_user=#{user_num} and like_ox='true') and a.user_num=#{user_num}
+</select>
+
+
+</mapper>
